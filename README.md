@@ -1,5 +1,4 @@
-hello everybody <br>
-
+<h1>base64编码解码<h1>
 base64编码解码js：http://www.cnblogs.com/pengchengzhong/p/6027663.html
 文件读取：(function () {
     paic.registerNamespace("paic.util");
