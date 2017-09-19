@@ -1,0 +1,163 @@
+1.sql
+<cacheModel id="dscsAuthorityByType" type="com.palic.elis.dscs.common.cache.ehcache.EhCacheController">
+        <flushInterval minutes="15" />
+        <flushOnExecute statement="authority.deleteAuthority" />
+        <flushOnExecute statement="authority.insertAuthority" />
+        <flushOnExecute statement="authority.updateAuthority" />
+    </cacheModel>
+
+2.ehcacheConfig.xml
+<ehcache>
+    <!-- 
+        磁盘存储:将缓存中暂时不使用的对象,转移到硬盘,类似于Windows系统的虚拟内存
+        path:指定在硬盘上存储对象的路径  
+     -->
+    <diskStore path="java.io.tmpdir"/>
+
+
+    <!-- 
+        defaultCache:默认的缓存配置信息,如果不加特殊说明,则所有对象按照此配置项处理
+        maxElementsInMemory:设置了缓存的上限,最多存储多少个记录对象
+        eternal:代表对象是否永不过期
+        timeToIdleSeconds:最大的发呆时间
+        timeToLiveSeconds:最大的存活时间  
+        overflowToDisk:是否允许对象被写入到磁盘
+     -->
+    <defaultCache maxElementsInMemory="10000"
+                  eternal="false"
+                  timeToIdleSeconds="120"
+                  timeToLiveSeconds="120"
+                  overflowToDisk="true"/>
+
+    <!-- 
+        cache:为指定名称的对象进行缓存的特殊配置
+        name:指定对象的完整名
+     -->
+    <!--权限查询-->
+    <cache
+            name="admin.dscsAuthorityByBusinessSource"
+            maxElementsInMemory="500"
+            eternal="false"
+            timeToLiveSeconds="600"
+            overflowToDisk="false"
+            memoryStoreEvictionPolicy="LRU"/>
+    <cache
+            name="admin.dscsAuthorityByType"
+            maxElementsInMemory="500"
+            eternal="false"
+            timeToLiveSeconds="600"
+            overflowToDisk="false"
+            memoryStoreEvictionPolicy="LRU"/>
+            
+    <!--受控词查询-->
+    <cache
+            name="admin.dscsControlWord"
+            maxElementsInMemory="500"
+            eternal="false"
+            timeToLiveSeconds="600"
+            overflowToDisk="false"
+            memoryStoreEvictionPolicy="LRU"/>
+            
+   <!--    渠道号  -->     
+   <cache
+            name="authority.PDFOrSignBussiness"
+            maxElementsInMemory="500"
+            eternal="false"
+            timeToLiveSeconds="600"
+            overflowToDisk="false"
+            memoryStoreEvictionPolicy="LRU"/>
+          <!--   公司名 -->
+  <cache
+            name="authority.OrgnizationInfo"
+            maxElementsInMemory="500"
+            eternal="false"
+            timeToLiveSeconds="600"
+            overflowToDisk="false"
+            memoryStoreEvictionPolicy="LRU"/> 
+            
+<cache
+            name="authority.dscsAuthorityByType"
+            maxElementsInMemory="500"
+            eternal="false"
+            timeToLiveSeconds="600"
+            overflowToDisk="false"
+            memoryStoreEvictionPolicy="LRU"/>      
+</ehcache>
+
+3.sql
+<select id="queryAuthorityByType1" 
+cacheModel="dscsAuthorityByType" 
+	parameterClass="java.lang.String" resultClass="com.alibaba.fastjson.JSONObject">
+		
+select * from dscs_authority where type = #type#
+</select>
+
+4.com.palic.elis.dscs.common.cache.ehcache.EhCacheController
+package com.palic.elis.dscs.common.cache.ehcache;
+
+import java.net.URL;
+import java.util.Properties;
+
+import com.ibatis.sqlmap.engine.cache.CacheController;
+import com.ibatis.sqlmap.engine.cache.CacheModel;
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
+
+public class EhCacheController implements CacheController {
+
+	private CacheManager cacheManager;
+
+	public static final String CONFIG_LOCATION = "configLocation";
+
+	public static final String DEFAULT_CONFIG_LOCATION = "/ehcacheConfig.xml";
+
+	public void flush(CacheModel cacheModel) {
+		getCache(cacheModel).removeAll();
+	}
+
+	public Object getObject(CacheModel cacheModel, Object key) {
+		Object result = null;
+		Element element = null;
+		Cache cache = getCache(cacheModel);
+		if (cache != null) {
+			element = cache.get(key);
+		}
+		if (element != null) {
+			result = element.getObjectValue();
+		}
+		return result;
+	}
+
+	public void putObject(CacheModel cacheModel, Object key, Object object) {
+		getCache(cacheModel).put(new Element(key, object));
+	}
+
+	public Object removeObject(CacheModel cacheModel, Object key) {
+		Object result = this.getObject(cacheModel, key);
+		getCache(cacheModel).remove(key);
+		return result;
+	}
+
+	private Cache getCache(CacheModel cacheModel) {
+		String cacheName = cacheModel.getId();
+		Cache cache = cacheManager.getCache(cacheName);
+		return cache;
+	}
+
+	public void finalize() {
+		if (cacheManager != null) {
+			cacheManager.shutdown();
+		}
+	}
+
+	@Override
+	public void configure(Properties props) {
+		String configLocation = props.getProperty(CONFIG_LOCATION);
+		if (configLocation == null) {
+			configLocation = DEFAULT_CONFIG_LOCATION;
+		}
+		URL url = getClass().getResource(configLocation);
+		cacheManager = CacheManager.create(url);
+	}
+}
