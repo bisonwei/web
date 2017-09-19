@@ -1,0 +1,66 @@
+   //ztree
+    createZtree: function (oper) {
+   		if(oper == 101){
+			roleManage.treeType = "functionTree";
+		}else if(oper == 102){
+			roleManage.treeType = "userTree";
+		};
+    	setting = {
+                view: {
+                    dblClickExpand: false,
+                    showLine: false,
+                    selectedMulti: false,  
+                    expandSpeed: "fast",
+                    showIcon: true,
+                    fontCss: getFontCss
+                }, 
+                check: {  
+                    enable: true,  
+                    chkStyle: "checkbox",  
+                    chkboxType : {  "Y" : "ps", "N" : "ps" }    
+                },  
+                data: {
+                    simpleData: {
+                        enable: true ,
+                        idKey : "id", // id编号命名     
+            			pIdKey : "parent_id", // 父id编号命名      
+                		rootId : 0  
+                    }
+                },
+    			callback: {
+    				beforeClick: beforeClick
+    			}
+            };
+        function beforeClick(treeId, treeNode) {
+			if (treeNode.isParent) {
+				return true;
+			} else {
+				return false;
+			}
+		};
+		function getFontCss(treeId, treeNode) {
+			return (!!treeNode.highlight) ? {color:"#A60000", "font-weight":"bold"} : {color:"#333", "font-weight":"normal"};
+		};
+		
+    	paic.post({
+            url: "role/getTree.do",
+            data: {
+                role_id: roleManage.role_id,
+                treeType: roleManage.treeType
+            },
+            success: function (data) {
+                if (data.errorCode == "0" && data.res) {
+                	$("#search_key").val("");
+                	if(roleManage.treeType == "functionTree"){
+                		$.fn.zTree.init($("#ztree"), setting, data.res.functions);
+            		}else if(roleManage.treeType == "userTree"){
+            			$.fn.zTree.init($("#ztree"), setting, data.res.users);
+            		};
+                } else {
+                    toastr.error(data.errorMessage);
+                }
+            }
+        });
+    	
+		 
+    }
