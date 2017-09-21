@@ -2,18 +2,7 @@ AES加密解密：http://blog.csdn.net/hbcui1984/article/details/5201247
 MAC算法家族：http://blog.csdn.net/lonelyroamer/article/details/7656338
 MD5算法加密:http://www.cnblogs.com/computer-lzy/archive/2011/04/28/2031649.html
 
-RestTemplate:http://www.cnblogs.com/BensonHe/p/4602746.html
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-        MediaType type = MediaType.parseMediaType("application/json; charset=UTF-8");
-        headers.setContentType(type);
-        headers.add("Accept", MediaType.APPLICATION_JSON.toString());
-        
-        JSONObject jsonObj = JSONObject.fromObject(params);
-        
-        HttpEntity<String> formEntity = new HttpEntity<String>(jsonObj.toString(), headers);
 
-        String result = restTemplate.postForObject(url, formEntity, String.class);
         
 base64编码解码js：http://www.cnblogs.com/pengchengzhong/p/6027663.html
 文件读取：(function () {
