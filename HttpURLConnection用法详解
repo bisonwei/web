@@ -1,0 +1,43 @@
+//HttpURLConnection用法详解http://www.blogjava.net/supercrsky/articles/247449.html 
+private static String service() throws Exception {
+		  
+    JSONObject res = new JSONObject();
+    res.put("name", "weiran");
+    
+    URL url = new URL("");//请求路径 
+		HttpURLConnection connection = (HttpURLConnection) url.openConnection();//此处的urlConnection对象实际上是根据URL的请求协议(此处是http)生成的URLConnection类  
+		connection.setDoOutput(true);//设置是否向httpUrlConnection输出，因为这个是post请求，参数要放在http正文内，因此需要设为true, 默认情况下是false;  
+		connection.setDoInput(true);// // 设置是否从httpUrlConnection读入，默认情况下是true;   
+		connection.setRequestMethod("POST");// 设定请求的方法为"POST"，默认是GET   
+		connection.setUseCaches(false);// Post 请求不能使用缓存
+		connection.setInstanceFollowRedirects(true);
+		long timestamp = new Timestamp(System.currentTimeMillis()).getTime();
+		connection.setRequestProperty("Content-Type", "application/json");//设定传送的内容类型是可序列化的java对象   
+    // (如果不设此项,在传送序列化对象时,当WEB服务默认的不是这种类型时可能抛java.io.EOFException)   
+
+		connection.setRequestProperty("x-mx-timestamp", String.valueOf(timestamp));
+		
+		connection.connect();// 连接，从上述第2条中url.openConnection()至此的配置必须要在connect之前完成，
+    // 此处getOutputStream会隐含的进行connect(即：如同调用上面的connect()方法， 所以在开发中不调用上述的connect()也可以)。
+		DataOutputStream out = new DataOutputStream(new BufferedOutputStream(connection.getOutputStream()));
+		out.writeBytes(res.toString());//请求体 // 向对象输出流写出数据，这些数据将存到内存缓冲区中  
+		out.flush();// 刷新对象输出流，将任何字节都写入潜在的流中（些处为DataOutputStream） 
+		out.close();// 关闭流对象。此时，不能再向对象输出流写入任何数据，先前写入的数据存在于内存缓冲区中,   
+    // 在调用下边的getInputStream()函数时才把准备好的http请求正式发送到服务器   
+
+		StringBuffer sb = new StringBuffer("");
+
+		String lines = null;
+		if (connection.getResponseCode() == 200) {
+			// 当为200的情况下，使用connection.getInputStream() 来获取返回信息
+			BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "utf-8"));
+			while ((lines = reader.readLine()) != null) {
+				sb.append(lines);
+			}
+			reader.close();
+			connection.getInputStream().close();//inputStream要在connection disconnect 之前
+			connection.disconnect();
+			return sb.toString();
+		}
+		return lines;
+	}
