@@ -1,5 +1,19 @@
 //HttpURLConnection用法详解http://www.blogjava.net/supercrsky/articles/247449.html 
-private static String service() throws Exception {
+//RestTemplate restful 使用详解:http://www.cnblogs.com/BensonHe/p/4602746.html
+private static String RestTemplate() throws Exception {
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        MediaType type = MediaType.parseMediaType("application/json; charset=UTF-8");
+        headers.setContentType(type);
+        headers.add("Accept", MediaType.APPLICATION_JSON.toString());
+        
+        JSONObject jsonObj = JSONObject.fromObject(params);
+        
+        HttpEntity<String> formEntity = new HttpEntity<String>(jsonObj.toString(), headers);
+
+        String result = restTemplate.postForObject(url, formEntity, String.class);
+}
+private static String HttpURLConnection() throws Exception {
 		  
     JSONObject res = new JSONObject();
     res.put("name", "weiran");
